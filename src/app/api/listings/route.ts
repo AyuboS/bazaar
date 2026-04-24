@@ -15,11 +15,13 @@ const Schema = z.object({
   city:        z.string().min(1).max(64),
   district:    z.string().max(64).optional(),
   images:      z.array(z.string()).max(12).default([]),
-  attrs:       z.record(z.string() ,z.unknown()).default({}),
+  attrs:       z.record(z.string(), z.unknown()).default({}),
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth.api.getSession({ headers: headers() });
+  // ← await headers() — required in Next.js 15
+  const headersList = await headers();
+  const session = await auth.api.getSession({ headers: headersList });
   if (!session) return NextResponse.json({ error: "Nav autorizēts." }, { status: 401 });
 
   let body: unknown;
@@ -27,7 +29,10 @@ export async function POST(req: NextRequest) {
   catch { return NextResponse.json({ error: "Nepareizs pieprasījums." }, { status: 400 }); }
 
   const parsed = Schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Validācijas kļūda.", details: parsed.error.flatten() }, { status: 422 });
+  if (!parsed.success) return NextResponse.json(
+      { error: "Validācijas kļūda.", details: parsed.error.flatten() },
+      { status: 422 },
+  );
 
   const data      = parsed.data;
   const now       = new Date();
