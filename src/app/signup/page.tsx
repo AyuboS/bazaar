@@ -1,8 +1,8 @@
 "use client";
+import { signUp, signIn } from "@/lib/auth-client";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signUp } from "@/lib/auth-client";
 
 export default function SignupPage() {
   const router                  = useRouter();
@@ -32,7 +32,7 @@ export default function SignupPage() {
         <h1 className="text-xl font-semibold mb-6">Izveidot kontu</h1>
 
         <button
-          onClick={() => signUp.social?.({ provider: "google", callbackURL: "/" })}
+          onClick={() => signIn.social({ provider: "google", callbackURL: "/" })}
           className="w-full flex items-center justify-center gap-3 border border-[#E8E6DF] rounded-xl py-2.5 text-sm font-medium hover:bg-[#F3F2EE] transition-colors mb-5"
         >
           <GoogleIcon /> Turpināt ar Google
