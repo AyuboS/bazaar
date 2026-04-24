@@ -1,0 +1,2 @@
+Add these to the "scripts" section of your package.json:
+

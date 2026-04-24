@@ -1,26 +1,74 @@
 @import "tailwindcss";
+@source "../../src";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-canvas:        #FAFAF7;
+  --color-surface:       #FFFFFF;
+  --color-surface-muted: #F3F2EE;
+
+  --color-ink:       #0A0A0A;
+  --color-ink-soft:  #3A3A37;
+  --color-ink-muted: #6B6B68;
+  --color-ink-faint: #9C9A92;
+
+  --color-line:        #E8E6DF;
+  --color-line-strong: #C9C6BC;
+
+  --color-accent:      #B8651E;
+  --color-accent-dark: #9A5219;
+  --color-accent-soft: #FAEEDA;
+
+  --color-success: #1D9E75;
+  --color-danger:  #E24B4A;
+  --color-info:    #185FA5;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+:root { color-scheme: light; }
+*, *::before, *::after { box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01", "ss03";
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  min-height: 100vh;
 }
+
+:root {
+  --background:           249 249 247;
+  --foreground:           10 10 10;
+  --card:                 255 255 255;
+  --card-foreground:      10 10 10;
+  --primary:              10 10 10;
+  --primary-foreground:   250 250 247;
+  --secondary:            243 242 238;
+  --secondary-foreground: 10 10 10;
+  --muted:                243 242 238;
+  --muted-foreground:     107 107 104;
+  --accent:               243 242 238;
+  --accent-foreground:    10 10 10;
+  --destructive:          226 75 74;
+  --border:               232 230 223;
+  --input:                232 230 223;
+  --ring:                 184 101 30;
+  --radius:               0.5rem;
+}
+
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-line-strong); border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+::selection    { background: var(--color-accent-soft); color: var(--color-accent-dark); }
+a, button { transition: opacity 0.15s, color 0.15s, background 0.15s; }
