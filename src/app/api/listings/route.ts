@@ -15,7 +15,7 @@ const Schema = z.object({
   city:        z.string().min(1).max(64),
   district:    z.string().max(64).optional(),
   images:      z.array(z.string()).max(12).default([]),
-  attrs:       z.record(z.unknown()).default({}),
+  attrs:       z.record(z.string() ,z.unknown()).default({}),
 });
 
 export async function POST(req: NextRequest) {
