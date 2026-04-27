@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>maiņa.lv — Pērc. Pārdod. Mainies.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', sans-serif; background: #FAFAF7; color: #0A0A0A; }
+button, input, select { font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #F3F2EE; }
+::-webkit-scrollbar-thumb { background: #D4D2CA; border-radius: 3px; }
+
+/* Horizontal scroll row */
+.hscroll { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+.hscroll::-webkit-scrollbar { height: 0; }
+
+/* Card hover */
+.listing-card { transition: box-shadow 0.18s, transform 0.18s; cursor: pointer; }
+.listing-card:hover { box-shadow: 0 8px 32px rgba(10,10,10,0.13); transform: translateY(-3px); }
+
+.cat-tile { transition: box-shadow 0.15s, transform 0.15s; cursor: pointer; }
+.cat-tile:hover { box-shadow: 0 4px 18px rgba(10,10,10,0.10); transform: translateY(-2px); }
+
+/* Responsive grid */
+.ads-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1024px) { .ads-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 768px)  { .ads-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px)  { .ads-grid { grid-template-columns: 1fr 1fr; gap: 10px; } }
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+@media (max-width: 900px) { .cat-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 600px) { .cat-grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* Sticky nav */
+.sticky-nav { position: sticky; top: 0; z-index: 100; }
+
+@media (max-width: 768px) {
+  .nav-links { display: none !important; }
+  .nav-actions { gap: 8px !important; }
+  .hero-title { font-size: 28px !important; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ── Icons ──────────────────────────────────────────────────────────
+
+const ExchangeIcon = ({ size = 22, color = '#B8651E', sw = 2.4 }) => {
+  const c = size / 2, R = size * 0.33, r = size * 0.18;
+  const al = size * 0.16;
+  const arrowPts = (x, y, angle) => {
+    const a1 = angle + 2.4, a2 = angle - 2.4;
+    return `M${x+al*Math.cos(a1)},${y+al*Math.sin(a1)} L${x},${y} L${x+al*Math.cos(a2)},${y+al*Math.sin(a2)}`;
+  };
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none">
+      <path d={`M${c-R} ${c-r*0.5} A${R} ${R} 0 0 1 ${c+R} ${c-r*0.5}`} stroke={color} strokeWidth={sw} strokeLinecap="round"/>
+      <path d={arrowPts(c+R, c-r*0.5, Math.PI*0.55)} stroke={color} strokeWidth={sw} fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={`M${c+R} ${c+r*0.5} A${R} ${R} 0 0 1 ${c-R} ${c+r*0.5}`} stroke={color} strokeWidth={sw} strokeLinecap="round"/>
+      <path d={arrowPts(c-R, c+r*0.5, Math.PI*-0.45)} stroke={color} strokeWidth={sw} fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+};
+
+const Icon = ({ name, size = 20, color = '#0A0A0A' }) => {
+  const paths = {
+    search: <><circle cx="9" cy="9" r="6" stroke={color} strokeWidth="1.7" fill="none"/><line x1="14" y1="14" x2="19" y2="19" stroke={color} strokeWidth="1.7" strokeLinecap="round"/></>,
+    location: <><path d="M10 2C6.7 2 4 4.7 4 8C4 12.8 10 19 10 19C10 19 16 12.8 16 8C16 4.7 13.3 2 10 2Z" stroke={color} strokeWidth="1.6" fill="none"/><circle cx="10" cy="8" r="2.5" stroke={color} strokeWidth="1.5" fill="none"/></>,
+    chevron: <path d="M5 8L10 13L15 8" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" fill="none"/>,
+    heart: <path d="M10 16C10 16 3 11 3 6.5C3 4.5 4.8 3 7 3C8.2 3 9.3 3.6 10 4.5C10.7 3.6 11.8 3 13 3C15.2 3 17 4.5 17 6.5C17 11 10 16 10 16Z" stroke={color} strokeWidth="1.6" fill="none"/>,
+    plus: <><line x1="10" y1="3" x2="10" y2="17" stroke={color} strokeWidth="1.8" strokeLinecap="round"/><line x1="3" y1="10" x2="17" y2="10" stroke={color} strokeWidth="1.8" strokeLinecap="round"/></>,
+    menu: <><line x1="3" y1="6" x2="17" y2="6" stroke={color} strokeWidth="1.7" strokeLinecap="round"/><line x1="3" y1="10" x2="17" y2="10" stroke={color} strokeWidth="1.7" strokeLinecap="round"/><line x1="3" y1="14" x2="17" y2="14" stroke={color} strokeWidth="1.7" strokeLinecap="round"/></>,
+    bell: <><path d="M10 3C7.2 3 5 5.2 5 8V13H15V8C15 5.2 12.8 3 10 3Z" stroke={color} strokeWidth="1.6" fill="none"/><line x1="3" y1="13" x2="17" y2="13" stroke={color} strokeWidth="1.6" strokeLinecap="round"/><path d="M8 13C8 14.1 8.9 15 10 15C11.1 15 12 14.1 12 13" stroke={color} strokeWidth="1.5" fill="none"/></>,
+    user: <><circle cx="10" cy="7" r="4" stroke={color} strokeWidth="1.6" fill="none"/><path d="M3 18C3 14.7 6.1 12 10 12C13.9 12 17 14.7 17 18" stroke={color} strokeWidth="1.6" strokeLinecap="round" fill="none"/></>,
+    grid: <><rect x="3" y="3" width="6" height="6" rx="1" stroke={color} strokeWidth="1.5"/><rect x="11" y="3" width="6" height="6" rx="1" stroke={color} strokeWidth="1.5"/><rect x="3" y="11" width="6" height="6" rx="1" stroke={color} strokeWidth="1.5"/><rect x="11" y="11" width="6" height="6" rx="1" stroke={color} strokeWidth="1.5"/></>,
+    star: <path d="M10 2L12.4 7.3L18 8L14 12L15 18L10 15.3L5 18L6 12L2 8L7.6 7.3L10 2Z" stroke={color} strokeWidth="1.5" fill="none"/>,
+    arrowR: <path d="M5 10H15M10 5L15 10L10 15" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" fill="none"/>,
+    chat: <><path d="M3 6C3 4.3 4.3 3 6 3H14C15.7 3 17 4.3 17 6V11C17 12.7 15.7 14 14 14H9L5 17V14H6C4.3 14 3 12.7 3 11V6Z" stroke={color} strokeWidth="1.6" fill="none"/></>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+      {paths[name] || null}
+    </svg>
+  );
+};
+
+// ── Data ───────────────────────────────────────────────────────────
+
+const CITIES = ['Visa Latvija', 'Rīga', 'Daugavpils', 'Jelgava', 'Jēkabpils', 'Jūrmala', 'Liepāja', 'Rēzekne', 'Valmiera', 'Ventspils'];
+
+const CATEGORIES = [
+  { id: 'transport',   lv: 'Transports',         count: '12 840', bg: '#EEF5FB', icon: '#1A6FAA',
+    iconPath: <><rect x="3" y="10" width="18" height="8" rx="2" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="M3 13H21" stroke="currentColor" strokeWidth="1.5"/><circle cx="7" cy="19" r="2" stroke="currentColor" strokeWidth="1.7" fill="none"/><circle cx="17" cy="19" r="2" stroke="currentColor" strokeWidth="1.7" fill="none"/><path d="M5 10L7 5H17L19 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none"/></> },
+  { id: 'realestate',  lv: 'Nekustamais īpašums', count: '8 210', bg: '#EDF6F0', icon: '#1A7A52',
+    iconPath: <><rect x="4" y="10" width="16" height="11" rx="1" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="M2 10L12 3L22 10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/><rect x="9" y="14" width="6" height="7" rx="0.5" stroke="currentColor" strokeWidth="1.6" fill="none"/></> },
+  { id: 'electronics', lv: 'Elektronika',         count: '23 540', bg: '#FEF3E7', icon: '#B8651E',
+    iconPath: <><rect x="7" y="3" width="10" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" fill="none"/><circle cx="12" cy="16" r="1.2" fill="currentColor"/><line x1="9" y1="7" x2="15" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></> },
+  { id: 'jobs',        lv: 'Darbs',               count: '5 320', bg: '#F4EEFB', icon: '#7B3FA0',
+    iconPath: <><rect x="5" y="8" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="M9 8V7C9 5.9 9.9 5 11 5H13C14.1 5 15 5.9 15 7V8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" fill="none"/><line x1="5" y1="14" x2="19" y2="14" stroke="currentColor" strokeWidth="1.5"/></> },
+  { id: 'services',    lv: 'Pakalpojumi',          count: '9 180', bg: '#FFF0ED', icon: '#C04030',
+    iconPath: <><path d="M12 3L14 8L19 8L15 11.5L16.5 17L12 14L7.5 17L9 11.5L5 8L10 8L12 3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" fill="none"/></> },
+  { id: 'home',        lv: 'Mājai un dārzam',     count: '7 430', bg: '#EDFAF4', icon: '#1D9E75',
+    iconPath: <><path d="M12 3C12 3 5 8 5 14C5 17.3 8.1 20 12 20C15.9 20 19 17.3 19 14C19 8 12 3 12 3Z" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="M12 20V23" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M9 14C9 14 10 16 12 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></> },
+  { id: 'clothing',    lv: 'Apģērbs',             count: '18 650', bg: '#FFF0F6', icon: '#B03080',
+    iconPath: <><path d="M9 4H15M9 4C9 4 7 5 5 6L7 9C8 8 9 7.5 9 9V21H15V9C15 7.5 16 8 17 9L19 6C17 5 15 4 15 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/></> },
+  { id: 'animals',     lv: 'Dzīvnieki',           count: '3 290', bg: '#FFF8EC', icon: '#C07A10',
+    iconPath: <><circle cx="12" cy="14" r="5" stroke="currentColor" strokeWidth="1.8" fill="none"/><circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.5" fill="none"/><circle cx="17" cy="7" r="2" stroke="currentColor" strokeWidth="1.5" fill="none"/><circle cx="4" cy="12" r="1.8" stroke="currentColor" strokeWidth="1.4" fill="none"/><circle cx="20" cy="12" r="1.8" stroke="currentColor" strokeWidth="1.4" fill="none"/></> },
+  { id: 'children',    lv: 'Bērnu preces',        count: '6 710', bg: '#EEF4FF', icon: '#3060C0',
+    iconPath: <><circle cx="12" cy="9" r="4.5" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="M5 22C5 18.1 8.1 15 12 15C15.9 15 19 18.1 19 22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" fill="none"/></> },
+  { id: 'hobbies',     lv: 'Hobiji',              count: '4 880', bg: '#F5F0FF', icon: '#5A35C0',
+    iconPath: <><rect x="4" y="9" width="16" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8" fill="none"/><path d="M8 9V7C8 5.3 9.3 4 11 4H13C14.7 4 16 5.3 16 7V9" stroke="currentColor" strokeWidth="1.6" fill="none"/><circle cx="9" cy="15" r="1.5" fill="currentColor"/><circle cx="15" cy="15" r="1.5" fill="currentColor"/></> },
+];
+
+const CHIPS = [
+  'Automašīnas', 'Dzīvokļi īrē', 'iPhone', 'Velosipēdi', 'Mēbeles',
+  'Suni', 'Klēpjdatori', 'Vakances Rīgā', 'Bērnu ratiņi', 'Elektroinstrumenti',
+  'Apavi', 'Mājas', 'Planšetes', 'Darba apģērbs', 'Kaķi',
+];
+
+const ADS = [
+  { id:1,  cat:'Transports',   title:'BMW 320d xDrive, 2019', price:'€ 18 900', city:'Rīga',      time:'Šodien, 10:45', top:true,  img:'#D4D2CA', tag:'TOP' },
+  { id:2,  cat:'Elektronika',  title:'iPhone 15 Pro 256GB, melns', price:'€ 890', city:'Jūrmala', time:'Šodien, 09:12', top:false, img:'#D8D6CE', tag:null },
+  { id:3,  cat:'Nekustamais',  title:'2-ist. dzīvoklis Āgenskalnā', price:'€ 850/mēn.', city:'Rīga', time:'Šodien, 08:33', top:true, img:'#C8C6BE', tag:'TOP' },
+  { id:4,  cat:'Apģērbs',      title:'Zara ziemas mētelis, M, jauns', price:'€ 45', city:'Valmiera', time:'Vakar, 22:10', top:false, img:'#DEDAD2', tag:null },
+  { id:5,  cat:'Mājai',        title:'IKEA KALLAX plaukts, balts', price:'€ 35', city:'Rīga',      time:'Vakar, 19:54', top:false, img:'#E0DED6', tag:null },
+  { id:6,  cat:'Darbs',        title:'Programmētājs (React) — pilna slodze', price:'€ 2 800', city:'Rīga', time:'Vakar, 17:30', top:false, img:'#CCCAC2', tag:'JAUNS' },
+  { id:7,  cat:'Transports',   title:'Trek FX3 velosipēds, 2022', price:'€ 420', city:'Jelgava',   time:'Vakar, 15:20', top:false, img:'#D0CEC6', tag:null },
+  { id:8,  cat:'Dzīvnieki',    title:'Britu īsspalvainais kaķēns', price:'€ 150', city:'Liepāja',  time:'26. apr.', top:false, img:'#D6D4CC', tag:null },
+  { id:9,  cat:'Elektronika',  title:'Sony WH-1000XM5 austiņas', price:'€ 220', city:'Rīga',      time:'26. apr.', top:false, img:'#DAD8D0', tag:null },
+  { id:10, cat:'Bērnu preces', title:'Cybex Balios S Lux ratiņi', price:'€ 380', city:'Jūrmala',  time:'25. apr.', top:false, img:'#CECDBD', tag:null },
+  { id:11, cat:'Transports',   title:'Volkswagen Golf 8, 2021', price:'€ 23 500', city:'Daugavpils', time:'25. apr.', top:true, img:'#C4C2BA', tag:'TOP' },
+  { id:12, cat:'Hobiji',       title:'Canon EOS R6 + 24-70mm', price:'€ 2 100', city:'Rīga',      time:'24. apr.', top:false, img:'#D2D0C8', tag:null },
+];
+
+const FEATURED_ADS = ADS.filter(a => a.top);
+const LATEST_ADS   = ADS.filter(a => !a.top);
+
+const POPULAR = ['automašīnas', 'iphone 15', 'dzīvoklis Rīgā', 'klēpjdators', 'velosipēds', 'darbs Rīgā', 'mēbeles', 'kaķi', 'suni', 'iPhone 14', 'māja', 'ratiņi', 'samsung', 'sofa', 'vakance'];
+
+// ── Sub-components ────────────────────────────────────────────────
+
+const Logo = ({ small }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+    <ExchangeIcon size={small ? 20 : 24} color="#B8651E" sw={small ? 2.2 : 2.6}/>
+    <span style={{ fontWeight: 800, fontSize: small ? 17 : 20, letterSpacing: '-0.7px', color: '#0A0A0A', lineHeight: 1 }}>
+      maiņa<span style={{ color: '#B8651E' }}>.lv</span>
+    </span>
+  </div>
+);
+
+const ListingCard = ({ ad, wide }) => {
+  const [saved, setSaved] = React.useState(false);
+  return (
+    <div className="listing-card" style={{
+      background: '#FFFFFF',
+      borderRadius: 10,
+      border: `1.5px solid ${ad.top ? '#B8651E' : '#E8E6DF'}`,
+      overflow: 'hidden',
+      boxShadow: ad.top ? '0 2px 16px rgba(184,101,30,0.10)' : '0 1px 4px rgba(10,10,10,0.05)',
+      display: wide ? 'flex' : 'block',
+      minWidth: wide ? 260 : undefined,
+      maxWidth: wide ? 300 : undefined,
+      flexShrink: wide ? 0 : undefined,
+    }}>
+      {/* Image */}
+      <div style={{ position: 'relative', height: wide ? '100%' : 150, minHeight: wide ? 160 : undefined, width: wide ? 120 : '100%', background: ad.img, flexShrink: 0 }}>
+        <svg width="100%" height="100%" viewBox="0 0 200 150" preserveAspectRatio="xMidYMid slice">
+          <rect width="200" height="150" fill={ad.img}/>
+          {[...Array(6)].map((_,i) => (
+            <line key={i} x1={i*36-10} y1="0" x2={i*36+130} y2="150" stroke="rgba(10,10,10,0.05)" strokeWidth="1.2"/>
+          ))}
+          <text x="100" y="78" textAnchor="middle" dy="0.35em" fontFamily="monospace" fontSize="10" fill="rgba(10,10,10,0.25)">foto</text>
+        </svg>
+        {ad.tag && (
+          <div style={{ position: 'absolute', top: 8, left: 8, background: ad.tag === 'TOP' ? '#B8651E' : '#1D9E75', color: '#FFF', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, letterSpacing: '0.04em' }}>
+            {ad.tag}
+          </div>
+        )}
+        <button onClick={() => setSaved(s => !s)} style={{
+          position: 'absolute', top: 8, right: 8, width: 30, height: 30, borderRadius: '50%',
+          background: 'rgba(255,255,255,0.92)', border: 'none', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 20 20" fill={saved ? '#E24B4A' : 'none'}>
+            <path d="M10 16C10 16 3 11 3 6.5C3 4.5 4.8 3 7 3C8.2 3 9.3 3.6 10 4.5C10.7 3.6 11.8 3 13 3C15.2 3 17 4.5 17 6.5C17 11 10 16 10 16Z" stroke={saved ? '#E24B4A' : '#6B6B68'} strokeWidth="1.6"/>
+          </svg>
+        </button>
+      </div>
+      {/* Content */}
+      <div style={{ padding: '11px 13px' }}>
+        <div style={{ fontSize: 11, color: '#6B6B68', marginBottom: 4 }}>{ad.cat}</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#0A0A0A', lineHeight: 1.35, marginBottom: 8 }}>{ad.title}</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: '#0A0A0A', letterSpacing: '-0.5px', marginBottom: 8 }}>{ad.price}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#6B6B68' }}>
+            <Icon name="location" size={13} color="#6B6B68"/>
+            {ad.city}
+          </div>
+          <span style={{ fontSize: 10, color: '#9A9A96' }}>{ad.time}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CatTile = ({ cat, onClick }) => (
+  <div className="cat-tile" onClick={() => onClick(cat)} style={{
+    background: cat.bg,
+    borderRadius: 12,
+    padding: '18px 12px 14px',
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+    border: '1px solid transparent',
+    cursor: 'pointer',
+  }}>
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" color={cat.icon} style={{ flexShrink: 0 }}>
+      {cat.iconPath}
+    </svg>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#0A0A0A', lineHeight: 1.3 }}>{cat.lv}</div>
+      <div style={{ fontSize: 10, color: '#6B6B68', marginTop: 2 }}>{cat.count}</div>
+    </div>
+  </div>
+);
+
+// ── Navbar ────────────────────────────────────────────────────────
+
+const Navbar = ({ city, setCity, query, setQuery, mobileMenu, setMobileMenu }) => {
+  const [cityOpen, setCityOpen] = React.useState(false);
+  return (
+    <header className="sticky-nav" style={{ background: '#FFFFFF', borderBottom: '1px solid #E8E6DF', boxShadow: '0 1px 8px rgba(10,10,10,0.06)' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', height: 60, display: 'flex', alignItems: 'center', gap: 16 }}>
+        <Logo/>
+
+        {/* Search bar */}
+        <div style={{
+          flex: 1, maxWidth: 580, display: 'flex',
+          border: '1.5px solid #E8E6DF', borderRadius: 9,
+          overflow: 'hidden', background: '#FAFAF7',
+        }}>
+          {/* City */}
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setCityOpen(o => !o)} style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '0 12px', height: 40, background: 'none', border: 'none',
+              borderRight: '1px solid #E8E6DF', cursor: 'pointer', whiteSpace: 'nowrap',
+              fontSize: 12, fontWeight: 500, color: '#0A0A0A',
+            }}>
+              <Icon name="location" size={14} color="#6B6B68"/>
+              {city}
+              <Icon name="chevron" size={12} color="#6B6B68"/>
+            </button>
+            {cityOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: 4,
+                background: '#FFFFFF', border: '1px solid #E8E6DF', borderRadius: 8,
+                boxShadow: '0 8px 24px rgba(10,10,10,0.12)', zIndex: 200,
+                minWidth: 160, padding: '4px 0',
+              }}>
+                {CITIES.map(c => (
+                  <div key={c} onClick={() => { setCity(c); setCityOpen(false); }} style={{
+                    padding: '9px 16px', fontSize: 13, cursor: 'pointer', color: city === c ? '#B8651E' : '#0A0A0A',
+                    fontWeight: city === c ? 600 : 400, background: city === c ? '#FEF3E7' : 'transparent',
+                  }}
+                  onMouseEnter={e => e.target.style.background = '#FAFAF7'}
+                  onMouseLeave={e => e.target.style.background = city === c ? '#FEF3E7' : 'transparent'}>
+                    {c}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Input */}
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Ko meklē?"
+            style={{ flex: 1, border: 'none', outline: 'none', padding: '0 12px', fontSize: 13, color: '#0A0A0A', background: 'transparent' }}
+          />
+          <button style={{ padding: '0 16px', background: '#0A0A0A', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+            <Icon name="search" size={16} color="#FFFFFF"/>
+          </button>
+        </div>
+
+        {/* Nav links */}
+        <nav className="nav-links" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+          {['Transports', 'Nekustamais', 'Darbs'].map(l => (
+            <span key={l} style={{ fontSize: 13, color: '#6B6B68', cursor: 'pointer', whiteSpace: 'nowrap', fontWeight: 500 }}
+              onMouseEnter={e => e.target.style.color='#0A0A0A'} onMouseLeave={e => e.target.style.color='#6B6B68'}>{l}</span>
+          ))}
+        </nav>
+
+        {/* Actions */}
+        <div className="nav-actions" style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex' }}>
+            <Icon name="bell" size={20} color="#6B6B68"/>
+          </button>
+          <button style={{ background: 'none', border: '1px solid #E8E6DF', borderRadius: 7, padding: '0 12px', height: 36, fontSize: 13, color: '#0A0A0A', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icon name="user" size={16} color="#0A0A0A"/>
+            <span>Ieiet</span>
+          </button>
+          <button style={{ background: '#B8651E', border: 'none', borderRadius: 7, padding: '0 16px', height: 36, fontSize: 13, color: '#FFFFFF', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+            <Icon name="plus" size={14} color="#FFFFFF"/>
+            Ievietot
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+// ── Category strip ────────────────────────────────────────────────
+
+const CategorySection = ({ onSelect }) => (
+  <div style={{ background: '#FFFFFF', borderBottom: '1px solid #E8E6DF', padding: '28px 0 24px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
+      <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', marginBottom: 18, letterSpacing: '-0.3px' }}>
+        Pārlūko kategorijas
+      </h2>
+      <div className="cat-grid">
+        {CATEGORIES.map(cat => <CatTile key={cat.id} cat={cat} onClick={onSelect}/>)}
+      </div>
+    </div>
+  </div>
+);
+
+// ── Chips ─────────────────────────────────────────────────────────
+
+const ChipsSection = ({ setQuery }) => {
+  const [active, setActive] = React.useState(null);
+  return (
+    <div style={{ background: '#FAFAF7', borderBottom: '1px solid #E8E6DF', padding: '12px 0' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }} className="hscroll">
+          {CHIPS.map(chip => (
+            <button key={chip} onClick={() => { setActive(chip); setQuery(chip); }} style={{
+              flexShrink: 0,
+              padding: '7px 14px',
+              background: active === chip ? '#0A0A0A' : '#FFFFFF',
+              border: `1.5px solid ${active === chip ? '#0A0A0A' : '#E8E6DF'}`,
+              borderRadius: 20,
+              fontSize: 12, fontWeight: 500,
+              color: active === chip ? '#FFFFFF' : '#0A0A0A',
+              cursor: 'pointer', transition: 'all 0.14s',
+            }}>{chip}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Featured ──────────────────────────────────────────────────────
+
+const FeaturedSection = () => (
+  <section style={{ padding: '36px 0 0' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 4, height: 20, background: '#B8651E', borderRadius: 2 }}/>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', letterSpacing: '-0.3px' }}>TOP sludinājumi</h2>
+          <div style={{ padding: '2px 8px', background: '#FEF3E7', border: '1px solid rgba(184,101,30,0.3)', borderRadius: 10, fontSize: 10, fontWeight: 700, color: '#B8651E' }}>TOP</div>
+        </div>
+        <button style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#B8651E', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
+          Skatīt visus <Icon name="arrowR" size={14} color="#B8651E"/>
+        </button>
+      </div>
+      <div className="hscroll" style={{ paddingBottom: 8 }}>
+        {[...ADS, ...ADS].filter(a => a.top).map((ad, i) => (
+          <ListingCard key={`${ad.id}-${i}`} ad={ad} wide/>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+// ── Latest ads ────────────────────────────────────────────────────
+
+const LatestSection = ({ activeCat }) => {
+  const [showAll, setShowAll] = React.useState(false);
+  const filtered = activeCat ? ADS.filter(a => a.cat.toLowerCase().includes(activeCat.toLowerCase())) : ADS;
+  const displayed = showAll ? filtered : filtered.slice(0, 8);
+
+  return (
+    <section style={{ padding: '36px 0' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 4, height: 20, background: '#0A0A0A', borderRadius: 2 }}/>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', letterSpacing: '-0.3px' }}>
+              {activeCat ? `${activeCat}` : 'Jaunākie sludinājumi'}
+            </h2>
+            <span style={{ fontSize: 12, color: '#6B6B68', fontWeight: 400 }}>{filtered.length} sludinājumi</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['Visi', 'Šodien', 'Vakar'].map((f, i) => (
+              <button key={f} style={{
+                padding: '5px 12px', borderRadius: 6,
+                background: i === 0 ? '#0A0A0A' : 'none',
+                border: `1px solid ${i === 0 ? '#0A0A0A' : '#E8E6DF'}`,
+                fontSize: 12, fontWeight: i === 0 ? 600 : 400,
+                color: i === 0 ? '#FFFFFF' : '#6B6B68', cursor: 'pointer',
+              }}>{f}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="ads-grid">
+          {displayed.map(ad => <ListingCard key={ad.id} ad={ad}/>)}
+        </div>
+
+        {!showAll && filtered.length > 8 && (
+          <div style={{ textAlign: 'center', marginTop: 32 }}>
+            <button onClick={() => setShowAll(true)} style={{
+              background: 'none', border: '1.5px solid #0A0A0A',
+              borderRadius: 8, padding: '12px 32px',
+              fontSize: 14, fontWeight: 600, color: '#0A0A0A', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'all 0.14s',
+            }}>
+              Rādīt vairāk sludinājumus <Icon name="arrowR" size={16} color="#0A0A0A"/>
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
+// ── Popular searches ──────────────────────────────────────────────
+
+const PopularSection = ({ setQuery }) => (
+  <section style={{ background: '#FFFFFF', borderTop: '1px solid #E8E6DF', padding: '32px 0' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
+      <h3 style={{ fontSize: 13, fontWeight: 700, color: '#6B6B68', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 16 }}>
+        Populāri meklējumi
+      </h3>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {POPULAR.map(p => (
+          <button key={p} onClick={() => setQuery(p)} style={{
+            padding: '6px 14px', background: '#F3F2EE', border: '1px solid #E8E6DF',
+            borderRadius: 20, fontSize: 12, color: '#0A0A0A', cursor: 'pointer',
+            fontWeight: 400, transition: 'all 0.12s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background='#FEF3E7'; e.currentTarget.style.color='#B8651E'; e.currentTarget.style.borderColor='rgba(184,101,30,0.3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background='#F3F2EE'; e.currentTarget.style.color='#0A0A0A'; e.currentTarget.style.borderColor='#E8E6DF'; }}>
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+// ── App banner ────────────────────────────────────────────────────
+
+const AppBanner = () => (
+  <section style={{ background: '#0A0A0A', padding: '40px 0' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <ExchangeIcon size={28} color="#B8651E" sw={2.8}/>
+          <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-0.8px', color: '#FFFFFF' }}>
+            maiņa<span style={{ color: '#B8651E' }}>.lv</span>
+          </span>
+        </div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.8px', lineHeight: 1.15, marginBottom: 8 }}>
+          Pērc. Pārdod.<br/><span style={{ color: '#B8651E' }}>Mainies.</span>
+        </div>
+        <div style={{ fontSize: 14, color: '#555', maxWidth: 380 }}>
+          Lejupielādē lietotni un iekļūsti 200 000+ sludinājumos. Paziņojumi par jauniem piedāvājumiem.
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 12 }}>
+        {['App Store', 'Google Play'].map(s => (
+          <button key={s} style={{
+            background: '#1A1A1A', border: '1px solid #2A2A2A', borderRadius: 10,
+            padding: '12px 22px', cursor: 'pointer', textAlign: 'left',
+          }}>
+            <div style={{ fontSize: 10, color: '#555', marginBottom: 2 }}>Lejupielādēt no</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{s}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+// ── Footer ────────────────────────────────────────────────────────
+
+const Footer = () => {
+  const cols = [
+    { title: 'maiņa.lv', links: ['Par mums', 'Kā pārdot?', 'Kā pirkt?', 'Drošība', 'Karjera'] },
+    { title: 'Palīdzība', links: ['Palīdzības centrs', 'Kontakti', 'Lietošanas noteikumi', 'Privātuma politika', 'Sīkdatnes'] },
+    { title: 'Populāras kategorijas', links: ['Transports', 'Nekustamais', 'Elektronika', 'Darbs', 'Apģērbs'] },
+    { title: 'Biznesam', links: ['Reklāma', 'TOP sludinājumi', 'API', 'Partneriem'] },
+  ];
+  return (
+    <footer style={{ background: '#111111', padding: '48px 0 28px', borderTop: '1px solid #1A1A1A' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32, marginBottom: 40 }}>
+          {cols.map(col => (
+            <div key={col.title}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF', marginBottom: 14, letterSpacing: '0.04em' }}>{col.title}</div>
+              {col.links.map(l => (
+                <div key={l} style={{ fontSize: 12, color: '#444', marginBottom: 9, cursor: 'pointer', transition: 'color 0.12s' }}
+                  onMouseEnter={e => e.target.style.color='#888'} onMouseLeave={e => e.target.style.color='#444'}>{l}</div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop: '1px solid #1A1A1A', paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ExchangeIcon size={16} color="#B8651E" sw={2}/>
+            <span style={{ fontWeight: 800, fontSize: 14, color: '#FFFFFF', letterSpacing: '-0.4px' }}>maiņa<span style={{ color: '#B8651E' }}>.lv</span></span>
+          </div>
+          <div style={{ fontSize: 11, color: '#2A2A2A' }}>© 2026 maiņa.lv · Latvija · Sludinājumi bez komisijas</div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+// ── Mobile bottom nav ─────────────────────────────────────────────
+
+const MobileNav = () => {
+  const [tab, setTab] = React.useState('home');
+  const tabs = [
+    { id:'home', label:'Sākums', icon:'grid' },
+    { id:'search', label:'Meklēt', icon:'search' },
+    { id:'post', label:'Ievietot', icon:'plus', cta: true },
+    { id:'messages', label:'Ziņas', icon:'chat' },
+    { id:'profile', label:'Profils', icon:'user' },
+  ];
+  return (
+    <div style={{
+      display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: '#FFFFFF', borderTop: '1px solid #E8E6DF',
+      padding: '8px 0 env(safe-area-inset-bottom, 12px)',
+      justifyContent: 'space-around', alignItems: 'center', zIndex: 200,
+    }}
+    id="mobile-nav">
+      {tabs.map(t => t.cta ? (
+        <button key={t.id} onClick={() => setTab(t.id)} style={{
+          width: 48, height: 48, borderRadius: '50%', background: '#B8651E',
+          border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginTop: -20, boxShadow: '0 4px 16px rgba(184,101,30,0.4)',
+        }}>
+          <Icon name={t.icon} size={20} color="#FFFFFF"/>
+        </button>
+      ) : (
+        <button key={t.id} onClick={() => setTab(t.id)} style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+          background: 'none', border: 'none', cursor: 'pointer', padding: '0 8px',
+        }}>
+          <Icon name={t.icon} size={22} color={tab === t.id ? '#B8651E' : '#6B6B68'}/>
+          <span style={{ fontSize: 9.5, fontWeight: tab === t.id ? 600 : 400, color: tab === t.id ? '#B8651E' : '#6B6B68' }}>{t.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// ── App ───────────────────────────────────────────────────────────
+
+const App = () => {
+  const [city, setCity]     = React.useState('Visa Latvija');
+  const [query, setQuery]   = React.useState('');
+  const [activeCat, setActiveCat] = React.useState(null);
+
+  const handleCatSelect = (cat) => {
+    setActiveCat(prev => prev?.id === cat.id ? null : cat.lv);
+    document.getElementById('latest')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#FAFAF7' }}>
+      <Navbar city={city} setCity={setCity} query={query} setQuery={setQuery}/>
+      <CategorySection onSelect={handleCatSelect}/>
+      <ChipsSection setQuery={setQuery}/>
+      <FeaturedSection/>
+      <div id="latest">
+        <LatestSection activeCat={activeCat}/>
+      </div>
+      <PopularSection setQuery={setQuery}/>
+      <AppBanner/>
+      <Footer/>
+      <MobileNav/>
+
+      {/* Inject mobile nav CSS */}
+      <style>{`
+        @media (max-width: 768px) {
+          #mobile-nav { display: flex !important; }
+          body { padding-bottom: 68px; }
+          .cat-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .ads-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          footer > div > div:first-child { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

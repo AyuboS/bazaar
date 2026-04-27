@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>maiņa.lv — Visual Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #0A0A0A; font-family: 'Inter', sans-serif; min-height: 100vh; }
+  ::-webkit-scrollbar { width: 5px; background: #111; }
+  ::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 3px; }
+  button, input { font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="components/maina-logos.jsx"></script>
+<script type="text/babel" src="components/maina-sections.jsx"></script>
+
+<script type="text/babel">
+
+const SECTIONS = [
+  { id: 'logos',    num: '01', label: 'Logo Concepts A · B · C', component: LogosSection },
+  { id: 'favicon',  num: '02', label: 'Favicon Set',             component: FaviconSet },
+  { id: 'navbar',   num: '03', label: 'Navbar Logo in Context',  component: NavbarSection },
+  { id: 'spinner',  num: '04', label: 'Brand Spinner / Animation', component: SpinnerSection },
+  { id: 'og',       num: '05', label: 'OG Image Templates',      component: OGSection },
+  { id: 'palette',  num: '06', label: 'Color Palette',           component: PaletteSection },
+  { id: 'taglines', num: '07', label: 'Tagline Lockups',         component: TaglineSection },
+];
+
+const App = () => {
+  const [active, setActive] = React.useState('logos');
+
+  React.useEffect(() => {
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); }),
+      { threshold: 0.25, rootMargin: '-60px 0px -40% 0px' }
+    );
+    SECTIONS.forEach(s => { const el = document.getElementById(s.id); if (el) obs.observe(el); });
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+
+      {/* ── Sidebar ── */}
+      <nav style={{
+        width: 230, position: 'fixed', top: 0, left: 0, bottom: 0,
+        background: '#0D0D0D', borderRight: '1px solid #1A1A1A',
+        overflowY: 'auto', padding: '32px 0', zIndex: 10,
+      }}>
+        {/* Brand lockup */}
+        <div style={{ padding: '0 24px 28px', borderBottom: '1px solid #1A1A1A' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
+              <ExchangeIcon size={40} color="#B8651E" strokeWidth={3.8}/>
+            </svg>
+            <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-0.8px', color: '#FAFAF7' }}>
+              maiņa<span style={{ color: '#B8651E' }}>.lv</span>
+            </span>
+          </div>
+          <div style={{ fontSize: 10, color: '#333', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', paddingLeft: 30 }}>
+            Visual Identity v1.0
+          </div>
+        </div>
+
+        {/* Nav */}
+        <div style={{ padding: '18px 0' }}>
+          {SECTIONS.map(s => {
+            const isActive = active === s.id;
+            return (
+              <a key={s.id} href={`#${s.id}`}
+                onClick={e => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth' }); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '9px 24px', textDecoration: 'none',
+                  color: isActive ? '#FAFAF7' : '#444',
+                  background: isActive ? 'rgba(184,101,30,0.10)' : 'transparent',
+                  borderLeft: `2px solid ${isActive ? '#B8651E' : 'transparent'}`,
+                  transition: 'all 0.15s',
+                  fontSize: 12, fontWeight: isActive ? 600 : 400,
+                }}>
+                <span style={{ fontSize: 10, color: isActive ? '#B8651E' : '#2A2A2A', minWidth: 20, fontVariantNumeric: 'tabular-nums' }}>{s.num}</span>
+                {s.label}
+              </a>
+            );
+          })}
+        </div>
+
+        {/* Token pills */}
+        <div style={{ margin: '20px 16px 0', padding: 14, background: '#141414', borderRadius: 8, border: '1px solid #1E1E1E' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#333', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Tokens</div>
+          {[
+            ['Canvas', '#FAFAF7'], ['Ink', '#0A0A0A'], ['Amber', '#B8651E'],
+            ['Success', '#1D9E75'], ['Danger', '#E24B4A'],
+          ].map(([n, hex]) => (
+            <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+              <div style={{ width: 11, height: 11, borderRadius: 3, background: hex, flexShrink: 0, border: hex === '#FAFAF7' ? '1px solid #2A2A2A' : 'none' }}/>
+              <span style={{ fontSize: 10, color: '#444' }}>{n}</span>
+              <span style={{ fontSize: 9, color: '#2A2A2A', marginLeft: 'auto', fontFamily: 'monospace' }}>{hex}</span>
+            </div>
+          ))}
+          <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #1E1E1E', fontSize: 10, color: '#333' }}>
+            Font: <span style={{ color: '#555' }}>Inter 400/600/700/800</span>
+          </div>
+        </div>
+
+        {/* Origin note */}
+        <div style={{ margin: '16px 16px 0', padding: '10px 14px', background: 'rgba(184,101,30,0.06)', borderRadius: 8, border: '1px solid rgba(184,101,30,0.15)' }}>
+          <div style={{ fontSize: 9, color: '#B8651E', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: 4 }}>Name origin</div>
+          <div style={{ fontSize: 10, color: '#555', lineHeight: 1.55 }}>
+            <strong style={{ color: '#888' }}>maiņa</strong> means <em>exchange</em> in Latvian. The <strong style={{ color: '#B8651E' }}>ņ</strong> is uniquely Latvian — a brand asset, not a typographic problem.
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Main ── */}
+      <main style={{ marginLeft: 230, flex: 1, padding: '0 64px', maxWidth: 1040 }}>
+
+        {/* Page header */}
+        <header style={{ padding: '80px 0 64px', borderBottom: '1px solid #1A1A1A' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#B8651E', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 18 }}>
+            Visual Identity System · 2026
+          </div>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 20 }}>
+            <svg width="72" height="72" viewBox="0 0 40 40" fill="none" style={{ flexShrink: 0, marginTop: 4 }}>
+              <ExchangeIcon size={40} color="#B8651E" strokeWidth={3.6}/>
+            </svg>
+            <h1 style={{ fontSize: 68, fontWeight: 800, letterSpacing: '-3.5px', lineHeight: 0.92, color: '#FAFAF7' }}>
+              maiņa<span style={{ color: '#B8651E' }}>.lv</span>
+            </h1>
+          </div>
+          <p style={{ fontSize: 16, color: '#444', maxWidth: 500, lineHeight: 1.65 }}>
+            Latvia's modern exchange marketplace. <em style={{ color: '#666' }}>maiņa</em> means exchange — the ņ is the hero of this brand.
+          </p>
+          {/* Tag row */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 28, flexWrap: 'wrap' }}>
+            {[
+              'Inter · typeface', '#B8651E · amber accent',
+              'Latvian identity', 'Exchange motif', 'Bolt/Wise aesthetic',
+            ].map(t => (
+              <div key={t} style={{ padding: '5px 12px', background: '#111', border: '1px solid #1E1E1E', borderRadius: 20, fontSize: 11, color: '#555' }}>{t}</div>
+            ))}
+          </div>
+        </header>
+
+        {/* Sections */}
+        {SECTIONS.map(s => {
+          const Comp = s.component;
+          return (
+            <section key={s.id} id={s.id} data-screen-label={`${s.num} ${s.label}`}
+              style={{ borderBottom: '1px solid #1A1A1A', padding: '64px 0' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 36 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#B8651E', letterSpacing: '0.08em', fontVariantNumeric: 'tabular-nums' }}>{s.num}</span>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#FAFAF7', letterSpacing: '-0.4px' }}>{s.label}</h2>
+                <div style={{ flex: 1, height: 1, background: '#1A1A1A', marginLeft: 8 }}/>
+              </div>
+              <div style={{ background: '#FAFAF7', borderRadius: 14, padding: 40, border: '1px solid #222' }}>
+                <Comp/>
+              </div>
+            </section>
+          );
+        })}
+
+        <footer style={{ padding: '48px 0', textAlign: 'center', fontSize: 12, color: '#2A2A2A' }}>
+          maiņa<span style={{ color: '#B8651E' }}>.lv</span> Visual Identity · 2026 · Latvija
+        </footer>
+      </main>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
