@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Clock, Eye, Phone, ChevronRight } from "lucide-react";
@@ -8,11 +9,14 @@ import { Footer } from "@/components/layout/Footer";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { getListingById, getSimilarListings } from "@/db/queries";
 import { formatPrice, formatDate, timeAgo, isFeatured, initials } from "@/lib/utils";
+import { auth } from "@/lib/auth";
+import { ContactSellerButton } from "@/components/listings/ContactSellerButton";
 
-type Props = { params: { id: string } };
+type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const listing = await getListingById(parseInt(params.id, 10));
+  const { id } = await params;
+  const listing = await getListingById(parseInt(id, 10));
   if (!listing) return { title: "Sludinājums nav atrasts" };
   return {
     title:       listing.title,
@@ -22,15 +26,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ListingDetailPage({ params }: Props) {
-  const id = parseInt(params.id, 10);
+  const { id: idStr } = await params;
+  const id = parseInt(idStr, 10);
   if (isNaN(id)) notFound();
 
-  const listing = await getListingById(id);
+  const [listing, session] = await Promise.all([
+    getListingById(id),
+    auth.api.getSession({ headers: await headers() }),
+  ]);
   if (!listing) notFound();
 
   const similar    = listing.category ? await getSimilarListings(listing.category.id, id) : [];
   const featured   = isFeatured(listing.featuredUntil);
   const attrFields = listing.category?.attrsSchema?.fields ?? [];
+  const isOwnListing = session?.user.id === listing.seller?.id;
 
   return (
     <>
@@ -39,7 +48,7 @@ export default async function ListingDetailPage({ params }: Props) {
 
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1 text-sm text-[#6B6B68] mb-6">
-          <Link href="/public" className="hover:text-[#B8651E]">Sākums</Link>
+          <Link href="/" className="hover:text-[#B8651E]">Sākums</Link>
           <ChevronRight size={14} />
           {listing.category && (
             <><Link href={`/browse?cat=${listing.category.slug}`} className="hover:text-[#B8651E]">{listing.category.nameLv}</Link><ChevronRight size={14} /></>
@@ -146,6 +155,22 @@ export default async function ListingDetailPage({ params }: Props) {
                 </a>
               ) : (
                 <p className="text-center py-4 text-sm text-[#9C9A92]">Tālrunis nav norādīts</p>
+              )}
+
+              {/* Send message button */}
+              {!isOwnListing && listing.seller && (
+                <div className="mt-3">
+                  {session ? (
+                    <ContactSellerButton listingId={listing.id} />
+                  ) : (
+                    <Link
+                      href={`/login?from=/listing/${listing.id}`}
+                      className="flex items-center justify-center w-full border border-[#E8E6DF] text-[#3A3A37] py-2.5 rounded-xl text-sm font-medium hover:bg-[#F3F2EE] transition-colors"
+                    >
+                      Ienākt, lai sūtītu ziņu
+                    </Link>
+                  )}
+                </div>
               )}
 
               <div className="border-t border-[#E8E6DF] mt-4 pt-4 text-xs text-[#9C9A92] space-y-1">
