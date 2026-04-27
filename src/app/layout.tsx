@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/app/globals.css";
+import { MobileNav } from "@/components/layout/MobileNav";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -10,18 +11,18 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | bazaar.lv",
-    default:  "bazaar.lv — Sludinājumi Latvijā",
+    template: "%s | maiņa.lv",
+    default:  "maiņa.lv — Pērc. Pārdod. Mainies.",
   },
   description:
-    "Bezmaksas sludinājumi Latvijā. Nekustamais īpašums, transports, elektronika, darbs un vēl vairāk.",
-  keywords: ["sludinājumi", "bezmaksas", "latvija", "pārdod", "pērk", "īre"],
+    "Latvijas modernākais sludinājumu portāls. Nekustamais īpašums, transports, elektronika, darbs un vēl vairāk.",
+  keywords: ["sludinājumi", "bezmaksas", "latvija", "pārdod", "pērk", "mainies", "maiņa"],
   openGraph: {
     type:        "website",
     locale:      "lv_LV",
-    siteName:    "bazaar.lv",
-    title:       "bazaar.lv — Sludinājumi Latvijā",
-    description: "Bezmaksas sludinājumi Latvijā",
+    siteName:    "maiņa.lv",
+    title:       "maiņa.lv — Pērc. Pārdod. Mainies.",
+    description: "Latvijas modernākais sludinājumu portāls",
   },
 };
 
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="lv" className={inter.variable}>
       <body className="bg-[#FAFAF7] text-[#0A0A0A] antialiased">
         {children}
+        <MobileNav />
       </body>
     </html>
   );

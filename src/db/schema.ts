@@ -141,3 +141,34 @@ export const favorites = pgTable("favorites", {
 }, (t) => ({
   pk: uniqueIndex("favorites_pk").on(t.userId, t.listingId),
 }));
+
+// ─── Conversations ────────────────────────────────────────────────────────────
+
+export const conversations = pgTable("conversations", {
+  id:            serial("id").primaryKey(),
+  listingId:     integer("listing_id").notNull().references(() => listings.id, { onDelete: "cascade" }),
+  buyerId:       text("buyer_id").notNull().references(() => user.id),
+  sellerId:      text("seller_id").notNull().references(() => user.id),
+  createdAt:     timestamp("created_at").defaultNow().notNull(),
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+}, (t) => ({
+  listingBuyerUniq: uniqueIndex("conversations_listing_buyer_uniq").on(t.listingId, t.buyerId),
+  buyerIdx:         index("conversations_buyer_idx").on(t.buyerId),
+  sellerIdx:        index("conversations_seller_idx").on(t.sellerId),
+}));
+
+// ─── Messages ─────────────────────────────────────────────────────────────────
+
+export const messages = pgTable("messages", {
+  id:             serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  senderId:       text("sender_id").notNull().references(() => user.id),
+  receiverId:     text("receiver_id").notNull().references(() => user.id),
+  listingId:      integer("listing_id").notNull().references(() => listings.id),
+  body:           text("body").notNull(),
+  createdAt:      timestamp("created_at").defaultNow().notNull(),
+  readAt:         timestamp("read_at"),
+}, (t) => ({
+  convIdx:   index("messages_conv_idx").on(t.conversationId, t.createdAt),
+  senderIdx: index("messages_sender_idx").on(t.senderId),
+}));

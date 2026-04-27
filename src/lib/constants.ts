@@ -1,4 +1,4 @@
-export const APP_NAME = "bazaar.lv";
+export const APP_NAME = "maiņa.lv";
 export const APP_URL  = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 export const LISTINGS_PER_PAGE  = 24;

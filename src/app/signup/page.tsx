@@ -1,5 +1,7 @@
 "use client";
 import { signUp, signIn } from "@/lib/auth-client";
+import { ExchangeIcon } from "@/components/ui/ExchangeIcon";
+import { ExchangeSpinner } from "@/components/ui/ExchangeSpinner";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,8 +26,9 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#FAFAF7] px-4">
-      <Link href="/public" className="text-2xl font-semibold tracking-tight mb-8">
-        bazaar<span className="text-[#B8651E]">.</span>lv
+      <Link href="/" className="flex items-center gap-2 text-2xl font-semibold tracking-tight mb-8">
+        <ExchangeIcon size={26} strokeWidth={2.2} />
+        maiņa<span className="text-[#B8651E]">.lv</span>
       </Link>
 
       <div className="w-full max-w-sm bg-white border border-[#E8E6DF] rounded-2xl p-8">
@@ -61,7 +64,8 @@ export default function SignupPage() {
           {error && <p className="text-sm text-[#E24B4A] bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
 
           <button type="submit" disabled={loading}
-            className="w-full bg-[#0A0A0A] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[#3A3A37] transition-colors disabled:opacity-50">
+            className="w-full bg-[#0A0A0A] text-white rounded-xl py-2.5 text-sm font-medium hover:bg-[#3A3A37] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {loading && <ExchangeSpinner size={16} />}
             {loading ? "Reģistrējas…" : "Izveidot kontu"}
           </button>
         </form>
